@@ -13,6 +13,9 @@ export default {
           DEFAULT: '#eab308',
           hover: '#facc15',
         }
+      },
+      fontFamily: {
+        sans: ['"Google Sans"', 'sans-serif'],
       }
     },
   },

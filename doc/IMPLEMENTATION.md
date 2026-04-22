@@ -99,7 +99,6 @@ The layout uses a 3-pane vertical-split architecture, typical of pro-grade creat
 *   **Layer Stack**: A sortable list structure (drag-to-reorder via `dnd-kit`). Each item shows a visibility (eye) toggle, name, and delete button.
 *   **Active Layer Details**: When a layer is highlighted:
     *   A prompt textarea (or dropdown for predefined prompts).
-    *   A grid drop-zone to upload or drag-and-drop `inspirationImages`.
 
 ## 5. Detailed Implementation Plan (Step-by-Step)
 

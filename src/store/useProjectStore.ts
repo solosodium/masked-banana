@@ -18,6 +18,7 @@ export type ImageAsset = {
   fileData: string; // Base64
   width: number;
   height: number;
+  mimeType?: string;
 };
 
 export type Layer = {
@@ -25,10 +26,11 @@ export type Layer = {
   name: string;
   isVisible: boolean;
   maskStrokes: MaskStroke[];
-  inspirationImages: ImageAsset[];
   prompt: string;
   usePredefinedPrompt: boolean;
   predefinedPromptId?: string;
+  color: string;
+  maskImage?: ImageAsset;
 };
 
 export interface ProjectState {
@@ -51,7 +53,7 @@ export interface ProjectState {
   // Actions
   setApiKey: (key: string | null) => void;
   setTargetImage: (image: ImageAsset | null) => void;
-  addLayer: (layer: Omit<Layer, 'id'>) => void;
+  addLayer: (layer: Omit<Layer, 'id' | 'color'>) => void;
   deleteLayer: (id: string) => void;
   updateLayer: (id: string, partial: Partial<Layer>) => void;
   setCanvasView: (view: Partial<ProjectState['canvasView']>) => void;
@@ -63,6 +65,22 @@ export interface ProjectState {
 }
 
 const generateId = () => Math.random().toString(36).substring(2, 9);
+
+const PREDEFINED_COLORS = [
+  '#ef4444', // red
+  '#3b82f6', // blue
+  '#10b981', // green
+  '#f59e0b', // amber
+  '#8b5cf6', // purple
+  '#ec4899', // pink
+  '#06b6d4', // cyan
+  '#f97316', // orange
+  '#84cc16', // lime
+  '#6366f1', // indigo
+  '#14b8a6', // teal
+  '#eab308', // yellow
+  '#f43f5e', // rose
+];
 
 export const useProjectStore = create<ProjectState>((set) => ({
   version: '1.0',
@@ -91,13 +109,19 @@ export const useProjectStore = create<ProjectState>((set) => ({
   },
 
   setTargetImage: (image) => set({ targetImage: image }),
-  
-  addLayer: (layerOmitId) => set((state) => ({
-    layers: [...state.layers, { ...layerOmitId, id: generateId() }]
-  })),
+
+  addLayer: (layerOmitIdColor) => set((state) => {
+    if (state.layers.length >= 13) return state;
+
+    const existingColors = new Set(state.layers.map(l => l.color));
+    let color = PREDEFINED_COLORS.find(c => !existingColors.has(c));
+    return {
+      layers: [...state.layers, { ...layerOmitIdColor, id: generateId(), color }]
+    };
+  }),
 
   updateLayer: (id, partial) => set((state) => ({
-    layers: state.layers.map(layer => 
+    layers: state.layers.map(layer =>
       layer.id === id ? { ...layer, ...partial } : layer
     )
   })),

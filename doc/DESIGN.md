@@ -28,13 +28,12 @@ The application should support photoshop style masked image editing. This means 
 * Within each layer, user can:
     * Draw/erase by free hand on the transparent layers with different brush sizes and a custom mask color;
     * Draw/erase with rectangle and eclipse shapes on the transparent layers with a custom mask color;
-    * Upload/drag-drop/delete inspiration images to work with the the layer and mask;
     * Use either a predefined prompt or a custom prompt for the layer and mask;
     * Toggle to enable/disable the layer and mask;
 * Reorder layers;
 * Delete layers;
 * Add/edit an overall prompt for the target image in addition to the layer prompts;
-* Click to send target image, each layer mask, inspiration images, and prompts to the Gemini Nano Banana API;
+* Click to send target image, each layer mask, and prompts to the Gemini Nano Banana API;
 * Receive the edited image from the Gemini Nano Banana API;
 * Visualize the edited image in the main canvas;
 * Save the edited image to the local file system;
@@ -43,11 +42,11 @@ The application should support photoshop style masked image editing. This means 
 
 **RESEARCH**:
 * The main canvas should allow fairly complex image manipulation with user interaction. Research popular techniques for implementing such a canvas, analyze the pros and cons of each technique, and choose the best one for this project.
-* Design a sophiscated data structure to represent the project state, including the target image, layers, masks, inspiration images, and prompts. Justify your design choices.
+* Design a sophiscated data structure to represent the project state, including the target image, layers, masks, and prompts. Justify your design choices.
 
 ### Gemini Nano Banana API
 
-We will use the Gemini Nano Banana API to edit images. The API should support uploading multiple images with one of them as the target image and others as masks and inspiration images, and the aggregated prompts from the target image level and each layer level.
+We will use the Gemini Nano Banana API to edit images. The API should support uploading multiple images with one of them as the target image and others as masks, and the aggregated prompts from the target image level and each layer level.
 
 **RESEARCH**:
 * Research the Gemini Nano Banana API documentation, and figure out which model and which APIs this application should use. Copy the API documentation and link the sources.

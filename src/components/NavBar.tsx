@@ -18,11 +18,10 @@ export const NavBar = () => {
     <>
       <header className="h-14 bg-background border-b border-zinc-800 flex items-center justify-between px-4 select-none">
         <div className="font-bold text-lg text-primary flex items-center gap-2">
-          <span className="text-2xl">🍌</span> Masked Banana
+          <img src="/favicon.png" alt="Masked Banana" className="h-6 w-6" /> Masked Banana
         </div>
-        <div className="text-sm text-zinc-400">Project Workspace</div>
         <div className="flex gap-4 text-sm text-zinc-300">
-          <button 
+          <button
             onClick={() => setIsApiModalOpen(true)}
             className={`flex items-center gap-2 hover:text-primary transition-colors ${!apiKey ? 'text-red-400' : ''}`}
           >
@@ -37,7 +36,7 @@ export const NavBar = () => {
           </button>
         </div>
       </header>
-      
+
       <ApiKeyModal isOpen={isApiModalOpen} onClose={() => setIsApiModalOpen(false)} />
     </>
   );
