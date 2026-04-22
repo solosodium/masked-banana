@@ -20,7 +20,7 @@ export const ToolBar = () => {
     <aside className="w-16 bg-panel border-r border-zinc-800 flex flex-col items-center py-4 gap-2">
       {tools.map((tool) => {
         if (tool.divider) {
-          return <div key={tool.id} className="w-8 h-px bg-zinc-800 my-2" />;
+          return <div key={tool.id} className="w-8 h-px bg-zinc-700 my-2" />;
         }
 
         const Icon = tool.icon as any;

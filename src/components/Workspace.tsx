@@ -2,20 +2,28 @@ import React, { useRef, useState, useEffect } from 'react';
 import Konva from 'konva';
 import { Stage, Layer, Image as KonvaImage, Line, Rect, Ellipse, Circle } from 'react-konva';
 import useImage from 'use-image';
+import { Loader2, X } from 'lucide-react';
 import { useProjectStore } from '../store/useProjectStore';
+import { generateImage } from '../services/geminiService';
+import { ErrorModal } from './ErrorModal';
 
 export const Workspace = () => {
   const {
     targetImage, overallPrompt, setOverallPrompt, setTargetImage,
     canvasView, setCanvasView, layers, activeLayerId, activeTool,
-    brushSize, maskColor, updateLayer
+    brushSize, maskColor, updateLayer,
+    isGenerating, setIsGenerating, generatedImage, setGeneratedImage, apiKey,
+    isShowingGeneratedImage, setIsShowingGeneratedImage
   } = useProjectStore();
+
+  const [genImage] = useImage(generatedImage?.fileData || '');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const cursorLayerRef = useRef<any>(null);
   const cursorRef = useRef<any>(null);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+  const [errorModalMessage, setErrorModalMessage] = useState<string | null>(null);
   const isDrawing = useRef(false);
   const lastDist = useRef<number>(0);
 
@@ -104,6 +112,7 @@ export const Workspace = () => {
 
   // Drawing event handlers
   const handleMouseDown = (e: any) => {
+    if (isShowingGeneratedImage) return;
     if (activeTool === 'pan' || activeTool === 'select' || !activeLayerId) return;
 
     isDrawing.current = true;
@@ -138,6 +147,7 @@ export const Workspace = () => {
   };
 
   const handleMouseMove = (e: any) => {
+    if (isShowingGeneratedImage) return;
     const stage = e.target.getStage();
     const pos = stage.getPointerPosition();
     if (!pos) return;
@@ -256,106 +266,112 @@ export const Workspace = () => {
   };
 
   const handleGenerate = async () => {
-    if (!targetImage) {
-      alert("Please upload a target image first.");
+    if (!apiKey) {
+      setErrorModalMessage("Please set your Gemini API key in the settings first.");
       return;
     }
 
-    const compiledReferences: { type: 'image' | 'prompt', content: any }[] = [];
-
-    // Image 1: Target Image
-    compiledReferences.push({ type: 'image', content: targetImage });
-    compiledReferences.push({ type: 'prompt', content: `Base Instruction: ${overallPrompt}` });
-
-    let layerIndex = 1;
-
-    for (const layer of layers) {
-      if (!layer.isVisible) continue;
-      if (layer.maskStrokes.length === 0) continue;
-
-      let layerMaskBase64: string | null = null;
-      let maskImage: typeof targetImage | null = null;
-
-      // Extract mask if strokes exist
-      if (layer.maskStrokes.length > 0) {
-        // Create an off-screen container
-        const container = document.createElement('div');
-        const stage = new Konva.Stage({
-          container,
-          width: targetImage.width,
-          height: targetImage.height,
-        });
-
-        const konvaLayer = new Konva.Layer();
-
-        // Add all strokes matching the layer
-        for (const stroke of layer.maskStrokes) {
-          const compOp = stroke.mode === 'erase' ? 'destination-out' : 'source-over';
-
-          if (stroke.type === 'freehand') {
-            const pts = stroke.points?.flatMap(p => [p.x, p.y]) || [];
-            konvaLayer.add(new Konva.Line({
-              points: pts,
-              stroke: '#ffffff', // Use white for the mask output
-              strokeWidth: stroke.brushSize,
-              tension: 0.5,
-              lineCap: 'round',
-              lineJoin: 'round',
-              globalCompositeOperation: compOp,
-              opacity: 1
-            }));
-          } else if (stroke.type === 'rectangle') {
-            konvaLayer.add(new Konva.Rect({
-              x: stroke.width! < 0 ? stroke.x! + stroke.width! : stroke.x,
-              y: stroke.height! < 0 ? stroke.y! + stroke.height! : stroke.y,
-              width: Math.abs(stroke.width || 0),
-              height: Math.abs(stroke.height || 0),
-              fill: '#ffffff',
-              globalCompositeOperation: compOp,
-              opacity: 1
-            }));
-          } else if (stroke.type === 'ellipse') {
-            konvaLayer.add(new Konva.Ellipse({
-              x: stroke.x,
-              y: stroke.y,
-              radiusX: stroke.radiusX,
-              radiusY: stroke.radiusY,
-              fill: '#ffffff',
-              globalCompositeOperation: compOp,
-              opacity: 1
-            }));
-          }
-        }
-
-        stage.add(konvaLayer);
-        layerMaskBase64 = stage.toDataURL({ mimeType: 'image/png' });
-        stage.destroy();
-
-        // Save back to store
-        maskImage = {
-          id: Math.random().toString(36).substring(2, 9),
-          fileData: layerMaskBase64,
-          width: targetImage.width,
-          height: targetImage.height,
-          mimeType: 'image/png'
-        };
-        updateLayer(layer.id, { maskImage });
-
-        compiledReferences.push({ type: 'prompt', content: `Layer ${layerIndex} Mask:` });
-        compiledReferences.push({ type: 'image', content: maskImage });
-      }
-
-      compiledReferences.push({ type: 'prompt', content: `Layer ${layerIndex} Prompt: ${layer.prompt}` });
-
-      layerIndex++;
+    if (!targetImage) {
+      setErrorModalMessage("Please upload a target image first.");
+      return;
     }
 
-    // Output compiled references
-    console.log('=== GENERATE PAYLOAD ===');
-    const imageCount = compiledReferences.filter(r => r.type === 'image').length;
-    console.log(`Total Images: ${imageCount} (API limit is 14)`);
-    console.dir(compiledReferences);
-    alert(`Payload compiled and logged to console! Total images: ${imageCount}`);
+    setIsGenerating(true);
+    setGeneratedImage(null);
+
+    try {
+
+      let layerIndex = 1;
+
+      for (const layer of layers) {
+        if (!layer.isVisible) continue;
+        if (layer.maskStrokes.length === 0) continue;
+
+        let layerMaskBase64: string | null = null;
+        let maskImage: typeof targetImage | null = null;
+
+        // Extract mask if strokes exist
+        if (layer.maskStrokes.length > 0) {
+          // Create an off-screen container
+          const container = document.createElement('div');
+          const stage = new Konva.Stage({
+            container,
+            width: targetImage.width,
+            height: targetImage.height,
+          });
+
+          const konvaLayer = new Konva.Layer();
+
+          // Add all strokes matching the layer
+          for (const stroke of layer.maskStrokes) {
+            const compOp = stroke.mode === 'erase' ? 'destination-out' : 'source-over';
+
+            if (stroke.type === 'freehand') {
+              const pts = stroke.points?.flatMap(p => [p.x, p.y]) || [];
+              konvaLayer.add(new Konva.Line({
+                points: pts,
+                stroke: '#ffffff', // Use white for the mask output
+                strokeWidth: stroke.brushSize,
+                tension: 0.5,
+                lineCap: 'round',
+                lineJoin: 'round',
+                globalCompositeOperation: compOp,
+                opacity: 1
+              }));
+            } else if (stroke.type === 'rectangle') {
+              konvaLayer.add(new Konva.Rect({
+                x: stroke.width! < 0 ? stroke.x! + stroke.width! : stroke.x,
+                y: stroke.height! < 0 ? stroke.y! + stroke.height! : stroke.y,
+                width: Math.abs(stroke.width || 0),
+                height: Math.abs(stroke.height || 0),
+                fill: '#ffffff',
+                globalCompositeOperation: compOp,
+                opacity: 1
+              }));
+            } else if (stroke.type === 'ellipse') {
+              konvaLayer.add(new Konva.Ellipse({
+                x: stroke.x,
+                y: stroke.y,
+                radiusX: stroke.radiusX,
+                radiusY: stroke.radiusY,
+                fill: '#ffffff',
+                globalCompositeOperation: compOp,
+                opacity: 1
+              }));
+            }
+          }
+
+          stage.add(konvaLayer);
+          layerMaskBase64 = stage.toDataURL({ mimeType: 'image/png' });
+          stage.destroy();
+
+          // Save back to store
+          maskImage = {
+            id: Math.random().toString(36).substring(2, 9),
+            fileData: layerMaskBase64,
+            width: targetImage.width,
+            height: targetImage.height,
+            mimeType: 'image/png'
+          };
+          updateLayer(layer.id, { maskImage });
+        }
+
+        layerIndex++;
+      }
+
+      // Call API
+      try {
+        const result = await generateImage(apiKey, targetImage, useProjectStore.getState().layers, overallPrompt);
+        setGeneratedImage(result);
+      } catch (err: any) {
+        console.error(err);
+        setErrorModalMessage(`Generation failed: ${err.message}`);
+      }
+    } catch (err: any) {
+      console.error(err);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -364,6 +380,32 @@ export const Workspace = () => {
         ref={containerRef}
         className="flex-1 overflow-hidden flex items-center justify-center bg-zinc-900 border-zinc-800 m-4 rounded-xl border border-dashed relative"
       >
+        {isGenerating && (
+          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm rounded-xl">
+            <Loader2 className="animate-spin text-primary mb-4" size={48} />
+            <p className="text-primary font-semibold text-lg animate-pulse">Generating your image...</p>
+          </div>
+        )}
+
+        {generatedImage && (
+          <div className="absolute top-4 right-4 z-40 bg-zinc-800 text-zinc-200 px-2 py-2 rounded-full shadow-lg border border-zinc-700 font-medium flex items-center gap-2">
+            <button
+              onClick={() => setIsShowingGeneratedImage(!isShowingGeneratedImage)}
+              className="px-3 py-1 hover:bg-zinc-700 rounded-full transition-colors text-sm font-semibold"
+            >
+              {isShowingGeneratedImage ? 'Show Original Masks' : 'Show Generated Image'}
+            </button>
+            <div className="w-px h-4 bg-zinc-600"></div>
+            <button
+              onClick={() => setGeneratedImage(null)}
+              className="p-1 hover:bg-zinc-700 hover:text-red-400 rounded-full transition-colors"
+              title="Clear Generated Image"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
         {!targetImage ? (
           <div className="text-zinc-500 flex flex-col items-center gap-4">
             <p>Upload an image to start editing</p>
@@ -409,7 +451,7 @@ export const Workspace = () => {
             </Layer>
 
             {/* Mask Layers */}
-            {layers.filter(l => l.isVisible).map(layer => (
+            {!isShowingGeneratedImage && layers.filter(l => l.isVisible).map(layer => (
               <Layer key={layer.id}>
                 {layer.maskStrokes.map(stroke => {
                   const compOp = stroke.mode === 'erase' ? 'destination-out' : 'source-over';
@@ -463,7 +505,7 @@ export const Workspace = () => {
             ))}
 
             {/* Cursor UI Layer */}
-            {(activeTool === 'brush' || activeTool === 'eraser') && (
+            {!isShowingGeneratedImage && (activeTool === 'brush' || activeTool === 'eraser') && (
               <Layer ref={cursorLayerRef}>
                 <Circle
                   ref={cursorRef}
@@ -475,11 +517,18 @@ export const Workspace = () => {
                 />
               </Layer>
             )}
+
+            {/* Generated Image Overlay */}
+            {isShowingGeneratedImage && generatedImage && genImage && (
+              <Layer>
+                <KonvaImage image={genImage} />
+              </Layer>
+            )}
           </Stage>
         )}
       </div>
 
-      <div className="h-24 bg-panel border-t border-zinc-800 p-4 shrink-0 flex gap-4 items-center relative z-10">
+      <div className="h-24 bg-panel border-t border-zinc-800 pt-4 pb-4 shrink-0 flex gap-4 items-center relative z-10">
         <textarea
           className="flex-1 h-full bg-zinc-900 border border-zinc-700 rounded-lg p-3 text-zinc-100 placeholder-zinc-500 resize-none focus:outline-none focus:border-primary transition-colors"
           placeholder="Overall image generation prompt. e.g. Replace background with forest, add a hat to the person, etc."
@@ -488,11 +537,20 @@ export const Workspace = () => {
         />
         <button
           onClick={handleGenerate}
-          className="h-full px-8 bg-primary hover:bg-primary-hover text-zinc-900 font-bold rounded-lg shadow-lg flex items-center justify-center transition-all"
+          disabled={isGenerating}
+          className={`h-full px-8 font-bold rounded-lg shadow-lg flex items-center justify-center transition-all ${isGenerating
+            ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed'
+            : 'bg-primary hover:bg-primary-hover text-zinc-900'
+            }`}
         >
-          Generate
+          {isGenerating ? 'Generating...' : 'Generate'}
         </button>
       </div>
+
+      <ErrorModal
+        message={errorModalMessage}
+        onClose={() => setErrorModalMessage(null)}
+      />
     </main>
   );
 };

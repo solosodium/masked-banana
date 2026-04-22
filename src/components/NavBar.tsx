@@ -10,7 +10,7 @@ export const NavBar = () => {
   // Optionally auto-open if no key
   useEffect(() => {
     if (!apiKey) {
-      // setIsApiModalOpen(true);
+      setIsApiModalOpen(true);
     }
   }, [apiKey]);
 

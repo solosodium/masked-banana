@@ -5,9 +5,18 @@ import { useProjectStore } from '../store/useProjectStore';
 export const PropertyPanel = () => {
   const { layers, addLayer, deleteLayer, activeLayerId, setActiveLayerId } = useProjectStore();
 
+  const getNextLayerNumber = () => {
+    if (layers.length === 0) {
+      return 1;
+    }
+    const layerNumbers = layers.map(l => parseInt(l.name.split(' ')[1] || '0'));
+    const maxLayerNumber = Math.max(...layerNumbers);
+    return isNaN(maxLayerNumber) ? 1 : maxLayerNumber + 1;
+  }
+
   const handleAddLayer = () => {
     addLayer({
-      name: `Layer ${layers.length + 1}`,
+      name: `Layer ${getNextLayerNumber()}`,
       isVisible: true,
       maskStrokes: [],
       prompt: '',
@@ -25,13 +34,13 @@ export const PropertyPanel = () => {
           <Layers size={18} /> Layers
         </h2>
         <div className="flex items-center gap-2">
-          {layers.length >= 13 && (
-            <span className="text-xs text-amber-500 font-medium">Max 13 layers</span>
+          {layers.length >= 10 && (
+            <span className="text-xs text-amber-500 font-medium">10 layers max</span>
           )}
           <button
             onClick={handleAddLayer}
-            disabled={layers.length >= 13}
-            className={`p-1 rounded transition-colors ${layers.length >= 13 ? 'text-zinc-600 cursor-not-allowed' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700'}`}
+            disabled={layers.length >= 10}
+            className={`p-1 rounded transition-colors ${layers.length >= 10 ? 'text-zinc-600 cursor-not-allowed' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700'}`}
             title="Add Layer"
           >
             <Plus size={18} />

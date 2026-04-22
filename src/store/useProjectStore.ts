@@ -49,6 +49,8 @@ export interface ProjectState {
   activeTool: 'select' | 'pan' | 'brush' | 'eraser' | 'rectangle' | 'ellipse';
   brushSize: number;
   maskColor: string;
+  isGenerating: boolean;
+  isShowingGeneratedImage: boolean;
 
   // Actions
   setApiKey: (key: string | null) => void;
@@ -62,6 +64,9 @@ export interface ProjectState {
   setActiveTool: (tool: ProjectState['activeTool']) => void;
   setBrushSize: (size: number) => void;
   setMaskColor: (color: string) => void;
+  setIsGenerating: (isGenerating: boolean) => void;
+  setGeneratedImage: (image: ImageAsset | null) => void;
+  setIsShowingGeneratedImage: (val: boolean) => void;
 }
 
 const generateId = () => Math.random().toString(36).substring(2, 9);
@@ -98,6 +103,8 @@ export const useProjectStore = create<ProjectState>((set) => ({
   activeTool: 'select',
   brushSize: 20,
   maskColor: '#ef4444', // default red
+  isGenerating: false,
+  isShowingGeneratedImage: false,
 
   setApiKey: (key) => {
     if (key) {
@@ -111,7 +118,7 @@ export const useProjectStore = create<ProjectState>((set) => ({
   setTargetImage: (image) => set({ targetImage: image }),
 
   addLayer: (layerOmitIdColor) => set((state) => {
-    if (state.layers.length >= 13) return state;
+    if (state.layers.length >= 10) return state;
 
     const existingColors = new Set(state.layers.map(l => l.color));
     let color = PREDEFINED_COLORS.find(c => !existingColors.has(c));
@@ -139,5 +146,8 @@ export const useProjectStore = create<ProjectState>((set) => ({
   setActiveLayerId: (id) => set({ activeLayerId: id }),
   setActiveTool: (tool) => set({ activeTool: tool }),
   setBrushSize: (size) => set({ brushSize: size }),
-  setMaskColor: (color) => set({ maskColor: color })
+  setMaskColor: (color) => set({ maskColor: color }),
+  setIsGenerating: (isGenerating) => set({ isGenerating }),
+  setGeneratedImage: (image) => set({ generatedImage: image, isShowingGeneratedImage: !!image }),
+  setIsShowingGeneratedImage: (val) => set({ isShowingGeneratedImage: val })
 }));
