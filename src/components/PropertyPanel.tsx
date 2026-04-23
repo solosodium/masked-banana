@@ -1,6 +1,6 @@
 import React from 'react';
 import { Layers, Plus, Eye, EyeOff, Trash2 } from 'lucide-react';
-import { useProjectStore } from '../store/useProjectStore';
+import { useProjectStore, APP_CONFIG } from '../store/useProjectStore';
 
 export const PropertyPanel = () => {
   const { layers, addLayer, deleteLayer, activeLayerId, setActiveLayerId } = useProjectStore();
@@ -34,13 +34,13 @@ export const PropertyPanel = () => {
           <Layers size={18} /> Layers
         </h2>
         <div className="flex items-center gap-2">
-          {layers.length >= 10 && (
-            <span className="text-xs text-amber-500 font-medium">10 layers max</span>
+          {layers.length >= APP_CONFIG.MAX_LAYERS && (
+            <span className="text-xs text-amber-500 font-medium">{APP_CONFIG.MAX_LAYERS} layers max</span>
           )}
           <button
             onClick={handleAddLayer}
-            disabled={layers.length >= 10}
-            className={`p-1 rounded transition-colors ${layers.length >= 10 ? 'text-zinc-600 cursor-not-allowed' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700'}`}
+            disabled={layers.length >= APP_CONFIG.MAX_LAYERS}
+            className={`p-1 rounded transition-colors ${layers.length >= APP_CONFIG.MAX_LAYERS ? 'text-zinc-600 cursor-not-allowed' : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700'}`}
             title="Add Layer"
           >
             <Plus size={18} />

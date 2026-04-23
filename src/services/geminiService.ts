@@ -6,9 +6,6 @@ export const generateImage = async (
   layers: Layer[],
   overallPrompt: string
 ): Promise<ImageAsset> => {
-  const parts: any[] = [];
-
-  parts.push({ text: `Base Instruction: ${overallPrompt}` });
 
   const extractBase64 = (dataUrl: string) => {
     return dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
@@ -19,19 +16,25 @@ export const generateImage = async (
     return match ? match[1] : fallback;
   };
 
-  parts.push({
-    inlineData: {
-      mimeType: targetImage.mimeType || extractMimeType(targetImage.fileData, 'image/jpeg'),
-      data: extractBase64(targetImage.fileData),
-    }
-  });
+  const parts: any[] = [];
+
+  const basePrompt = [
+    '## General Instruction',
+    'You are a professional image editing assistant.',
+    'You will receive a series of images with this text prompt.',
+    'The images contains a base image to be edited, followed by a series of layer masks.',
+    'The first image is the base image, and the second image is the first layer mask, the third image is the second layer mask, and so on.',
+    'The layer mask image is in png with transparent background, and the white pixels represents the mask.',
+    'When using the layer mask for editing, you should line up the mask with the base image to ensure the editing is done in the masked area.',
+    'You will first get a series of prompts specific to each layer mask, and you will edit the base image according to the layer mask and the prompt.',
+    'After that, you will receive a prompt specific to the base image, which will instruct you to edit the entire base image.'
+  ].join('\n');
+
+  parts.push({ text: basePrompt });
 
   let layerIndex = 1;
   for (const layer of layers) {
     if (!layer.isVisible || !layer.maskImage) continue;
-
-    parts.push({ text: `Layer ${layerIndex} Prompt: ${layer.prompt}` });
-    parts.push({ text: `Layer ${layerIndex} Mask:` });
 
     parts.push({
       inlineData: {
@@ -40,8 +43,19 @@ export const generateImage = async (
       }
     });
 
+    parts.push({ text: `## Layer ${layerIndex} Instruction\n${layer.prompt}` });
+
     layerIndex++;
   }
+
+  parts.push({ text: `## Base Image Instruction\n${overallPrompt}` });
+
+  parts.push({
+    inlineData: {
+      mimeType: targetImage.mimeType || extractMimeType(targetImage.fileData, 'image/jpeg'),
+      data: extractBase64(targetImage.fileData),
+    }
+  });
 
   const payload = {
     contents: [

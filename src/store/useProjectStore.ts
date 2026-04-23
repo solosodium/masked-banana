@@ -1,5 +1,10 @@
 import { create } from 'zustand';
 
+export const APP_CONFIG = {
+  DEFAULT_MASK_COLOR: '#ffffff',
+  MAX_LAYERS: 10,
+};
+
 export type Point = { x: number; y: number };
 
 export type MaskStroke = {
