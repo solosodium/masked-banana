@@ -434,7 +434,7 @@ export const Workspace = () => {
             onTouchEnd={handleTouchEnd}
             onMouseLeave={handleMouseLeave}
             onMouseEnter={handleMouseEnter}
-            className={activeTool === 'pan' ? 'cursor-move' : (activeTool === 'select' ? 'cursor-default' : (activeTool === 'brush' || activeTool === 'eraser' ? 'cursor-none' : 'cursor-crosshair'))}
+            className={isShowingGeneratedImage ? 'cursor-default' : (activeTool === 'pan' ? 'cursor-move' : (activeTool === 'select' ? 'cursor-default' : (activeTool === 'brush' || activeTool === 'eraser' ? 'cursor-none' : 'cursor-crosshair')))}
             style={{ touchAction: 'none' }}
           >
             {/* Base Image Layer */}
