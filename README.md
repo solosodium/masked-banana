@@ -75,4 +75,3 @@ This will generate optimized static files in the `dist` directory, which can be 
 
 - [Design Document](doc/DESIGN.md)
 - [Implementation Details](doc/IMPLEMENTATION.md)
-- [Production Plan](doc/PRODUCTIONIZE.md)
