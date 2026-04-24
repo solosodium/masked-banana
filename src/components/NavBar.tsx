@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Settings, Download, Upload, AlertCircle } from 'lucide-react';
+import { Settings, Download, Upload, AlertCircle, Image as ImageIcon } from 'lucide-react';
 import { ApiKeyModal } from './ApiKeyModal';
 import { useProjectStore } from '../store/useProjectStore';
 import { exportProject, importProject } from '../services/projectSyncService';
 
 export const NavBar = () => {
   const [isApiModalOpen, setIsApiModalOpen] = useState(false);
-  const { apiKey } = useProjectStore();
+  const { apiKey, generatedImage } = useProjectStore();
 
   // Optionally auto-open if no key
   useEffect(() => {
@@ -42,6 +42,45 @@ export const NavBar = () => {
     }
   };
 
+  const handleDownloadImage = async () => {
+    if (!generatedImage) return;
+    
+    const defaultFilename = `masked-banana-result-${Date.now()}.png`;
+    
+    if ('showSaveFilePicker' in window) {
+      try {
+        const response = await fetch(generatedImage.fileData);
+        const blob = await response.blob();
+        
+        const handle = await (window as any).showSaveFilePicker({
+          suggestedName: defaultFilename,
+          types: [{
+            description: 'PNG Image',
+            accept: { 'image/png': ['.png'] },
+          }],
+        });
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        return; // Success, exit
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          console.error('Failed to save file:', err);
+          alert('Failed to save image.');
+        }
+        return; // Either user cancelled or error handled, don't fall back
+      }
+    }
+
+    // Fallback for browsers that do not support showSaveFilePicker
+    const a = document.createElement('a');
+    a.href = generatedImage.fileData;
+    a.download = defaultFilename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
   return (
     <>
       <header className="h-14 bg-background border-b border-zinc-800 flex items-center justify-between px-4 select-none">
@@ -56,6 +95,15 @@ export const NavBar = () => {
             {!apiKey ? <AlertCircle size={16} /> : <Settings size={16} />}
             {apiKey ? 'API Settings' : 'Missing API Key'}
           </button>
+          {generatedImage && (
+            <button 
+              onClick={handleDownloadImage}
+              className="flex items-center gap-2 text-primary hover:text-amber-400 transition-colors font-medium mr-2"
+              title="Save the generated image to your computer"
+            >
+              <ImageIcon size={16} /> Save Image
+            </button>
+          )}
           <input 
             type="file" 
             ref={fileInputRef} 

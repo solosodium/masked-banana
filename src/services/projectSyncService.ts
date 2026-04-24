@@ -22,15 +22,38 @@ export const exportProject = async (state: ProjectState) => {
   zip.file('project.json', jsonString);
 
   const content = await zip.generateAsync({ type: 'blob' });
+  const defaultFilename = 'masked-banana-project.zip';
 
-  // Trigger download
+  if ('showSaveFilePicker' in window) {
+    try {
+      const handle = await (window as any).showSaveFilePicker({
+        suggestedName: defaultFilename,
+        types: [{
+          description: 'ZIP Archive',
+          accept: { 'application/zip': ['.zip'] },
+        }],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(content);
+      await writable.close();
+      return;
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        console.error('Failed to save project:', err);
+        throw err;
+      }
+      return;
+    }
+  }
+
+  // Fallback for browsers that do not support showSaveFilePicker
   const url = URL.createObjectURL(content);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'masked-banana-project.zip';
+  a.download = defaultFilename;
   document.body.appendChild(a);
   a.click();
-  
+
   // Cleanup
   setTimeout(() => {
     document.body.removeChild(a);
@@ -40,7 +63,7 @@ export const exportProject = async (state: ProjectState) => {
 
 export const importProject = async (file: File): Promise<Partial<ProjectState>> => {
   const zip = await JSZip.loadAsync(file);
-  
+
   const projectJsonFile = zip.file('project.json');
   if (!projectJsonFile) {
     throw new Error('Invalid project file: missing project.json');
@@ -48,7 +71,7 @@ export const importProject = async (file: File): Promise<Partial<ProjectState>> 
 
   const jsonString = await projectJsonFile.async('string');
   const parsedState = JSON.parse(jsonString) as Partial<ProjectState>;
-  
+
   // Additional validation could go here
   if (!parsedState.version || parsedState.version !== '1.0') {
     console.warn('Imported project version mismatch or missing.');
