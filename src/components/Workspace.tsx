@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import Konva from 'konva';
 import { Stage, Layer, Image as KonvaImage, Line, Rect, Ellipse, Circle } from 'react-konva';
 import useImage from 'use-image';
-import { Loader2, X } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useProjectStore, APP_CONFIG } from '../store/useProjectStore';
 import { generateImage } from '../services/geminiService';
 import { ErrorModal } from './ErrorModal';
@@ -332,8 +332,8 @@ export const Workspace = () => {
               konvaLayer.add(new Konva.Ellipse({
                 x: stroke.x,
                 y: stroke.y,
-                radiusX: stroke.radiusX,
-                radiusY: stroke.radiusY,
+                radiusX: stroke.radiusX || 0,
+                radiusY: stroke.radiusY || 0,
                 fill: APP_CONFIG.DEFAULT_MASK_COLOR,
                 globalCompositeOperation: compOp,
                 opacity: 1
@@ -483,8 +483,8 @@ export const Workspace = () => {
                         key={stroke.id}
                         x={stroke.x}
                         y={stroke.y}
-                        radiusX={stroke.radiusX}
-                        radiusY={stroke.radiusY}
+                        radiusX={stroke.radiusX || 0}
+                        radiusY={stroke.radiusY || 0}
                         fill={stroke.color}
                         globalCompositeOperation={compOp}
                         opacity={shapeOpacity}

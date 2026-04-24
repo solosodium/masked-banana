@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { MousePointer2, Move, Brush, Eraser, Square, Circle } from 'lucide-react';
 import { useProjectStore } from '../store/useProjectStore';
 

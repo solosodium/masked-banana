@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Layers, Plus, Eye, EyeOff, Trash2 } from 'lucide-react';
 import { useProjectStore, APP_CONFIG } from '../store/useProjectStore';
 

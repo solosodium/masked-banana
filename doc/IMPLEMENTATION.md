@@ -127,6 +127,6 @@ The layout uses a 3-pane vertical-split architecture, typical of pro-grade creat
 4.  Make the authenticated fetch request, parse the base64 response image, and display it above the target image layer.
 
 ### Phase 5: Persistence & Polish
-1.  Implement `exportProject()` using `jszip`. Serialize the Zustand state to heavily compress Base64 assets into actual binary files inside the zip, and write a pointing `project.json`.
-2.  Implement `importProject()` to unpack the zip and hydrate the Zustand store.
+1.  Implement `exportProject()` using `jszip`. Serialize the Zustand state to a standard JSON format `project.json` and compress the JSON file with zip and start downloading.
+2.  Implement `importProject()` to unpack the zip to get the `project.json` file and hydrate the Zustand state.
 3.  Test responsiveness and edge cases (e.g., missing API key warnings, empty target images, out-of-bounds layer drawing).

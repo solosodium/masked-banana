@@ -72,6 +72,7 @@ export interface ProjectState {
   setIsGenerating: (isGenerating: boolean) => void;
   setGeneratedImage: (image: ImageAsset | null) => void;
   setIsShowingGeneratedImage: (val: boolean) => void;
+  hydrateState: (state: Partial<ProjectState>) => void;
 }
 
 const generateId = () => Math.random().toString(36).substring(2, 9);
@@ -123,10 +124,10 @@ export const useProjectStore = create<ProjectState>((set) => ({
   setTargetImage: (image) => set({ targetImage: image }),
 
   addLayer: (layerOmitIdColor) => set((state) => {
-    if (state.layers.length >= 10) return state;
+    if (state.layers.length >= APP_CONFIG.MAX_LAYERS) return state;
 
     const existingColors = new Set(state.layers.map(l => l.color));
-    let color = PREDEFINED_COLORS.find(c => !existingColors.has(c));
+    let color = PREDEFINED_COLORS.find(c => !existingColors.has(c)) || PREDEFINED_COLORS[0];
     return {
       layers: [...state.layers, { ...layerOmitIdColor, id: generateId(), color }]
     };
@@ -154,5 +155,6 @@ export const useProjectStore = create<ProjectState>((set) => ({
   setMaskColor: (color) => set({ maskColor: color }),
   setIsGenerating: (isGenerating) => set({ isGenerating }),
   setGeneratedImage: (image) => set({ generatedImage: image, isShowingGeneratedImage: !!image }),
-  setIsShowingGeneratedImage: (val) => set({ isShowingGeneratedImage: val })
+  setIsShowingGeneratedImage: (val) => set({ isShowingGeneratedImage: val }),
+  hydrateState: (state) => set((prev) => ({ ...prev, ...state })),
 }));

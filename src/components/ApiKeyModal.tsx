@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Key } from 'lucide-react';
 import { useProjectStore } from '../store/useProjectStore';
 
