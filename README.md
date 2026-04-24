@@ -1,6 +1,6 @@
 # 🍌 Masked Banana
 
-**Try it at** masked-banana.web.app
+**Try it at** [masked-banana.web.app](https://masked-banana.web.app)
 
 **Masked Banana** is a modern, single-page web application (SPA) built with React and Vite. It provides a Photoshop-like layered masking experience directly in the browser, allowing you to seamlessly integrate your creativity with the **Gemini API** for powerful multimodal AI image editing.
 
