@@ -8,9 +8,11 @@ function App() {
   return (
     <div className="h-screen w-screen flex flex-col bg-background text-zinc-100 overflow-hidden">
       <NavBar />
-      <div className="flex-1 flex overflow-hidden">
-        <ToolBar />
-        <Workspace />
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+        <div className="flex-1 flex overflow-hidden">
+          <ToolBar />
+          <Workspace />
+        </div>
         <PropertyPanel />
       </div>
     </div>

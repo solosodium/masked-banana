@@ -524,17 +524,18 @@ export const Workspace = () => {
         )}
       </div>
 
-      <div className="h-20 bg-panel border-t border-zinc-800 py-3 shrink-0 flex gap-4 items-center relative z-10">
-        <textarea
-          className="flex-1 h-full bg-zinc-900 border border-zinc-700 rounded-lg p-3 text-zinc-100 placeholder-zinc-500 resize-none focus:outline-none focus:border-primary transition-colors"
-          placeholder="Overall image generation prompt. e.g. Replace background with forest, add a hat to the person, etc."
+      <div className="h-14 bg-panel border-t border-zinc-800 py-2 shrink-0 flex gap-2 items-center relative z-10">
+        <input
+          type="text"
+          className="flex-1 h-full bg-zinc-900 border border-zinc-700 rounded-md px-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-primary transition-colors"
+          placeholder="Overall image generation prompt. e.g. Replace background with forest..."
           value={overallPrompt}
           onChange={(e) => setOverallPrompt(e.target.value)}
         />
         <button
           onClick={handleGenerate}
           disabled={isGenerating}
-          className={`h-12 px-8 font-bold rounded-lg shadow-lg flex items-center justify-center transition-all ${isGenerating
+          className={`h-full px-6 m-2 text-sm font-bold rounded-md shadow flex items-center justify-center transition-all ${isGenerating
             ? 'bg-zinc-700 text-zinc-500 cursor-not-allowed'
             : 'bg-primary hover:bg-primary-hover text-zinc-900'
             }`}

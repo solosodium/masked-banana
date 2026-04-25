@@ -27,7 +27,7 @@ export const PropertyPanel = () => {
   };
 
   return (
-    <aside className="w-80 bg-panel border-l border-zinc-800 flex flex-col">
+    <aside className="w-full md:w-80 h-1/3 md:h-full shrink-0 bg-panel border-t md:border-t-0 md:border-l border-zinc-800 flex flex-col">
       {/* Layers Header */}
       <div className="p-4 border-b border-zinc-800 flex items-center justify-between">
         <h2 className="font-semibold text-zinc-200 flex items-center gap-2">
@@ -99,7 +99,7 @@ export const PropertyPanel = () => {
 
       {/* Active Layer Prompt */}
       {activeLayerId ? (
-        <div className="h-64 border-t border-zinc-800 p-4 bg-zinc-900/50 flex flex-col gap-3">
+        <div className="h-32 border-t border-zinc-800 p-4 bg-zinc-900/50 flex flex-col gap-3">
           <h3 className="text-sm font-medium text-zinc-400">Layer Mask Prompt</h3>
           <textarea
             className="flex-1 bg-zinc-900 border border-zinc-700 rounded-md p-2 text-sm text-zinc-200 resize-none focus:outline-none focus:border-primary transition-colors"
